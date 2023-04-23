@@ -42,6 +42,11 @@ let window = [];
 
 let timeoutID = 0;
 
+/////////////// Statistics ////////////////
+
+let retransmissionCount = 0
+let testInterval = 5000
+
 
 // Create a function to retransmit packets if the timer expires
 function retransmitPackets() {
@@ -50,9 +55,10 @@ function retransmitPackets() {
     // Resend all packets in the window
 
     if(DEBUG_ON) console.log("!! Window length: " + window.length)
-    for (let i = 0; i < window.length; i++) {
+    for (let i = 0; i < window.length && (window[i].time - new Date().getTime()) > TIMEOUT; i++) {
       if(DEBUG_ON) console.log('!!     Retransmitting packets ' + window[i].seqNumber + " at " + (new Date().getTime()));
-
+      
+      retransmissionCount++
       const packetString = JSON.stringify(window[i]);
       socket.send(packetString, SERVER_PORT, SERVER_ADDRESS);
 
@@ -118,16 +124,15 @@ let prog = (name) => {
       while (burst++ < BURST_SIZE)
       if (windowEnd - windowStart < WINDOW_SIZE) {
 
-        const packet = {
+        let packet = {
           seqNumber: i,
           message: `Packet ${i}`,
           subdata: subdata,
           frameNum: frameNum,
-          count: count
+          time: new Date().getTime()
         };
 
-        let time = new Date().getTime()
-        if(DEBUG_ON) console.log("-> Send seq " + packet.seqNumber + " at " + time)
+        if(DEBUG_ON) console.log("-> Send seq " + packet.seqNumber + " at " + packet.time)
 
         windowEnd++;
         window.push(packet);
@@ -137,6 +142,14 @@ let prog = (name) => {
         i++
         count++;
         frameNum = Math.floor(count / PARTITION)
+
+        if (packet.seqNumber % testInterval == 0 && packet.seqNumber != 0)
+        {
+          console.log("Retransmission Rate: "
+            + (retransmissionCount / testInterval).toPrecision(3)
+            + " %")
+            retransmissionCount = 0
+        }
       }
 
       done();
