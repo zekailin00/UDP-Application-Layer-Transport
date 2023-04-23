@@ -1,0 +1,23 @@
+{
+  "name": "udp-application-layer-transport",
+  "version": "1.0.0",
+  "description": "",
+  "main": "client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/zekailin00/UDP-Application-Layer-Transport.git"
+  },
+  "author": "zekailin00",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zekailin00/UDP-Application-Layer-Transport/issues"
+  },
+  "homepage": "https://github.com/zekailin00/UDP-Application-Layer-Transport#readme",
+  "dependencies": {
+    "async-lock": "^1.4.0"
+  }
+}
