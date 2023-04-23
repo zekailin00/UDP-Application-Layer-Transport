@@ -6,6 +6,22 @@ var data = fs.readFileSync('image.jpg');
 data = data.buffer.slice(0,data.byteLength * 1)
 console.log(data); 
 
+let data_list = new Uint8Array(data)
+console.log(data_list)
+
+const PARTITION = 280
+let subdata = data_list.subarray(0, data_list.length/PARTITION)
+
+let DEBUG_ON = false
+
+/////////////  Statistics /////////////
+
+let packetSize = subdata.length * 8 // in bits
+console.log("Packet Size in bits: " + packetSize)
+let testInterval = 300
+let timeBegin = 0
+let timeEnd = 0
+
 ////////////// UDP Client ///////////////
 
 const dgram = require('dgram');
@@ -43,12 +59,26 @@ socket.on('message', (message, remote) => {
     timeReceived: new Date().getTime()
   };
   const ackString = JSON.stringify(ackPacket);
+
+  if (ackNumber == testInterval)
+  {
+    timeEnd = new Date().getTime()
+  }
+  else if (ackNumber % testInterval == 0)
+  {
+    timeBegin = timeEnd
+    timeEnd= new Date().getTime()
+    console.log("Throughput: "
+      + (testInterval * packetSize * 1000 / (timeEnd - timeBegin) / 1024 / 1024).toPrecision(3)
+      + " Mbps")
+  }
+  
   
   socket.send(ackString, remote.port, remote.address, (err) => {
     if (err) {
       console.error(err);
     } else {
-      console.log(`Ack packet ${packet.seqNumber} back to client with ack number ${ackPacket.ackNumber}`) 
+      if (DEBUG_ON) console.log(`Ack packet ${packet.seqNumber} back to client with ack number ${ackPacket.ackNumber} at ${new Date().getTime()}`) 
     }
   });
 
