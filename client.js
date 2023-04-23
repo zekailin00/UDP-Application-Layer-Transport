@@ -25,10 +25,10 @@ const SERVER_PORT = 3200
 const ADDRESS = '192.168.1.179';
 const SERVER_ADDRESS = '192.168.1.122'
 
-const WINDOW_SIZE = 32;
-const TIMEOUT = 15
+const WINDOW_SIZE = 64;
+const TIMEOUT = 25
 const SEND_INTERVAL = 1 // cannot be less than 1, needs to increase burst size for higher data rate
-const BURST_SIZE = 3
+const BURST_SIZE = 6
 
 const DEBUG_ON = false
 
@@ -45,6 +45,9 @@ let timeoutID = 0;
 /////////////// Statistics ////////////////
 
 let retransmissionCount = 0
+let totalWindowSize = 0
+let totalLatency = 0
+let latencyCount = 0
 let testInterval = 5000
 
 
@@ -55,14 +58,14 @@ function retransmitPackets() {
     // Resend all packets in the window
 
     if(DEBUG_ON) console.log("!! Window length: " + window.length)
-    for (let i = 0; i < window.length && (window[i].time - new Date().getTime()) > TIMEOUT; i++) {
+    for (let i = 0; i < window.length && (new Date().getTime() - window[i].time) > TIMEOUT; i++) {
       if(DEBUG_ON) console.log('!!     Retransmitting packets ' + window[i].seqNumber + " at " + (new Date().getTime()));
       
       retransmissionCount++
       const packetString = JSON.stringify(window[i]);
       socket.send(packetString, SERVER_PORT, SERVER_ADDRESS);
 
-      if ((window[i].seqNumber + 1) % burst == 0)
+      if ((window[i].seqNumber + 1) % BURST_SIZE == 0)
         break;
     }
     
@@ -83,6 +86,16 @@ socket.on('message', (message, remote) => {
   lock.acquire('window', (done) =>
   {
     let time = new Date().getTime()
+
+    latencyCount++
+    totalLatency += (time - packet.timeSent)
+    if (latencyCount == testInterval)
+    {
+      console.log("Average latency: " + (totalLatency / latencyCount).toPrecision(3) + ' ms')
+      latencyCount = 0
+      totalLatency = 0
+    }
+
     // if (DEBUG_ON) console.log(".. Packet delivered at " + packet.timeReceived)
     if (DEBUG_ON) console.log("<- Get ack " + packet.ackNumber + " at " + time)
     if (DEBUG_ON) console.log("$$ Current window size is " + window.length)
@@ -150,6 +163,16 @@ let prog = (name) => {
             + " %")
             retransmissionCount = 0
         }
+
+        totalWindowSize += window.length
+        if (packet.seqNumber % testInterval == 0 && packet.seqNumber != 0)
+        {
+          console.log("Average window size: "
+            + (totalWindowSize / testInterval).toPrecision(3))
+            totalWindowSize = 0
+        }
+
+
       }
 
       done();
