@@ -22,12 +22,12 @@ const lock = new AsyncLock();
 // Constants
 const PORT = 3000;
 const SERVER_PORT = 3200
-const ADDRESS = 'localhost';
-const SERVER_ADDRESS = 'localhost'
+const ADDRESS = '192.168.1.179';
+const SERVER_ADDRESS = '192.168.1.122'
 
-const WINDOW_SIZE = 16;
-const TIMEOUT = 5
-const SEND_INTERVAL = 0.000000000001
+const WINDOW_SIZE = 64;
+const TIMEOUT = 10
+const SEND_INTERVAL = 0.1
 
 const DEBUG_ON = true
 
@@ -53,7 +53,7 @@ function retransmitPackets(seqNumber) {
       if(DEBUG_ON) console.log('!!     Retransmitting packets ' + window[i].seqNumber + " at " + (new Date().getTime()));
 
       const packetString = JSON.stringify(window[i]);
-      socket.send(packetString, SERVER_PORT, ADDRESS);
+      socket.send(packetString, SERVER_PORT, SERVER_ADDRESS);
     }
     
     // Restart the timer
@@ -73,8 +73,9 @@ socket.on('message', (message, remote) => {
   lock.acquire('window', (done) =>
   {
     let time = new Date().getTime()
-    if (DEBUG_ON) console.log(".. Packet delivered at " + packet.timeReceived)
+    // if (DEBUG_ON) console.log(".. Packet delivered at " + packet.timeReceived)
     if (DEBUG_ON) console.log("<- Get ack " + packet.ackNumber + " at " + time)
+    if (DEBUG_ON) console.log("$$ Current window size is " + window.length)
   
     // Remove all packets from the window that have been successfully received
     while (window.length > 0 && window[0].seqNumber < packet.ackNumber)
