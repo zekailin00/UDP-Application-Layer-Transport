@@ -25,7 +25,7 @@ const SERVER_PORT = 3200
 const ADDRESS = '192.168.1.179';
 const SERVER_ADDRESS = '192.168.1.122'
 
-const WINDOW_SIZE = 20;
+const WINDOW_SIZE = 32;
 const TIMEOUT = 15
 const SEND_INTERVAL = 1 // cannot be less than 1, needs to increase burst size for higher data rate
 const BURST_SIZE = 3
@@ -44,7 +44,7 @@ let timeoutID = 0;
 
 
 // Create a function to retransmit packets if the timer expires
-function retransmitPackets(seqNumber) {
+function retransmitPackets() {
 
   lock.acquire('window', (done) => {
     // Resend all packets in the window
@@ -55,10 +55,13 @@ function retransmitPackets(seqNumber) {
 
       const packetString = JSON.stringify(window[i]);
       socket.send(packetString, SERVER_PORT, SERVER_ADDRESS);
+
+      if ((window[i].seqNumber + 1) % burst == 0)
+        break;
     }
     
     // Restart the timer
-    timeoutID = setTimeout(retransmitPackets, TIMEOUT, seqNumber);
+    timeoutID = setTimeout(retransmitPackets, TIMEOUT);
     done();
   });
 
@@ -130,8 +133,6 @@ let prog = (name) => {
         window.push(packet);
         const packetString = JSON.stringify(packet);
         socket.send(packetString, SERVER_PORT, SERVER_ADDRESS);
-        clearTimeout(timeoutID)
-        timeoutID = setTimeout(retransmitPackets, TIMEOUT, packet.seqNumber);
 
         i++
         count++;
@@ -141,7 +142,8 @@ let prog = (name) => {
       done();
     });
   }, SEND_INTERVAL);
-  
+
+  timeoutID = setTimeout(retransmitPackets, TIMEOUT);
 }
 
 readline.question('Enter to begin:\n', prog);
