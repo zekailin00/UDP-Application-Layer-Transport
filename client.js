@@ -25,11 +25,12 @@ const SERVER_PORT = 3200
 const ADDRESS = '192.168.1.179';
 const SERVER_ADDRESS = '192.168.1.122'
 
-const WINDOW_SIZE = 64;
-const TIMEOUT = 10
-const SEND_INTERVAL = 0.1
+const WINDOW_SIZE = 20;
+const TIMEOUT = 15
+const SEND_INTERVAL = 1 // cannot be less than 1, needs to increase burst size for higher data rate
+const BURST_SIZE = 3
 
-const DEBUG_ON = true
+const DEBUG_ON = false
 
 // Create a UDP socket
 const socket = dgram.createSocket('udp4');
@@ -109,6 +110,9 @@ let prog = (name) => {
 
   setInterval(()=>{
     lock.acquire('window', (done) => {
+
+      let burst = 0
+      while (burst++ < BURST_SIZE)
       if (windowEnd - windowStart < WINDOW_SIZE) {
 
         const packet = {
