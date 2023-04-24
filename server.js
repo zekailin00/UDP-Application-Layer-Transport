@@ -18,7 +18,7 @@ let DEBUG_ON = false
 
 let packetSize = subdata.length * 8 // in bits
 console.log("Packet Size in bits: " + packetSize)
-let testInterval = 300
+let testInterval = 5000
 let timeBegin = 0
 let timeEnd = 0
 
@@ -28,7 +28,7 @@ const dgram = require('dgram');
 
 // Constants
 const SERVER_PORT = 3200;
-const SERVER_ADDRESS = 'localhost';
+const SERVER_ADDRESS = '192.168.1.122';
 
 // Create a UDP socket
 const socket = dgram.createSocket('udp4');
@@ -56,7 +56,7 @@ socket.on('message', (message, remote) => {
 
   const ackPacket = {
     ackNumber: ackNumber,
-    timeReceived: new Date().getTime()
+    timeSent: packet.time
   };
   const ackString = JSON.stringify(ackPacket);
 
