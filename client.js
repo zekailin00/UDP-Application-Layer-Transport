@@ -9,9 +9,14 @@ console.log(data);
 let data_list = new Uint8Array(data)
 console.log(data_list)
 
-const PARTITION = 280
-let subdata = data_list.subarray(0, data_list.length/PARTITION)
-console.log(subdata)
+const PARTITION = 210
+let subdata = new Uint8Array(data_list.subarray(0, data_list.length/PARTITION))
+let transmissionData = ""
+
+while(transmissionData.length < subdata.length)
+transmissionData += "a"
+console.log(JSON.stringify(transmissionData).length)
+
 
 ////////////// UDP Server ///////////////
 
@@ -140,7 +145,7 @@ let prog = (name) => {
         let packet = {
           seqNumber: i,
           message: `Packet ${i}`,
-          subdata: subdata,
+          subdata: transmissionData,
           frameNum: frameNum,
           time: new Date().getTime()
         };
